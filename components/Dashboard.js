@@ -145,6 +145,10 @@ export default function Dashboard({ onLogout }) {
               <CheckCircle className="h-4 w-4" />
               <span>Kanban</span>
             </TabsTrigger>
+            <TabsTrigger value="timetracker" className="flex items-center space-x-2">
+              <Clock className="h-4 w-4" />
+              <span>Time Tracker</span>
+            </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center space-x-2">
               <Settings className="h-4 w-4" />
               <span>Settings</span>
