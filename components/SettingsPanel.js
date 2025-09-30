@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Palette, Shield, Download, Upload, Trash2, Database, Info } from 'lucide-react';
+import { Palette, Shield, Download, Upload, Trash2, Database, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SettingsPanel() {
