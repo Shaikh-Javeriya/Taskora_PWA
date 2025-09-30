@@ -324,6 +324,11 @@ export default function Dashboard({ onLogout }) {
             <KanbanBoard onUpdate={loadDashboardData} />
           </TabsContent>
 
+          {/* Time Tracker Tab */}
+          <TabsContent value="timetracker">
+            <TimeTracker onUpdate={loadDashboardData} />
+          </TabsContent>
+
           {/* Settings Tab */}
           <TabsContent value="settings">
             <SettingsPanel />
