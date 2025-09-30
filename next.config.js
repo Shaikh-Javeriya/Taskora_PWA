@@ -1,40 +1,64 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  images: {
-    unoptimized: true,
-  },
+  // Enable PWA features
   experimental: {
-    // Remove if not using Server Components
-    serverComponentsExternalPackages: ['mongodb'],
+    webpackBuildWorker: true,
   },
-  webpack(config, { dev }) {
-    if (dev) {
-      // Reduce CPU/memory from file watching
-      config.watchOptions = {
-        poll: 2000, // check every 2 seconds
-        aggregateTimeout: 300, // wait before rebuilding
-        ignored: ['**/node_modules'],
-      };
-    }
-    return config;
-  },
-  onDemandEntries: {
-    maxInactiveAge: 10000,
-    pagesBufferLength: 2,
-  },
+  
+  // Configure headers for PWA
   async headers() {
     return [
       {
-        source: "/(.*)",
+        source: '/manifest.json',
         headers: [
-          { key: "X-Frame-Options", value: "ALLOWALL" },
-          { key: "Content-Security-Policy", value: "frame-ancestors *;" },
-          { key: "Access-Control-Allow-Origin", value: process.env.CORS_ORIGINS || "*" },
-          { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS" },
-          { key: "Access-Control-Allow-Headers", value: "*" },
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+        ],
+      },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
         ],
       },
     ];
+  },
+  
+  // Webpack configuration for PWA
+  webpack: (config, { dev, isServer }) => {
+    // Don't run service worker in development
+    if (!dev && !isServer) {
+      const originalEntry = config.entry;
+      config.entry = async () => {
+        const entries = await originalEntry();
+        
+        // Add service worker entry
+        if (entries['main.js'] && !entries['main.js'].includes('./lib/sw.js')) {
+          entries['sw'] = './lib/sw.js';
+        }
+        
+        return entries;
+      };
+    }
+    
+    return config;
+  },
+  
+  // Output configuration
+  output: 'standalone',
+  
+  // Image optimization
+  images: {
+    unoptimized: true,
   },
 };
 

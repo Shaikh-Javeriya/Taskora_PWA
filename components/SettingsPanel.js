@@ -1,0 +1,557 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { dbOperations } from '../lib/database';
+import { LocalAuth, ThemeManager } from '../lib/auth';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Palette, Shield, Download, Upload, Trash2, Database, Info } from 'lucide-react';
+import { toast } from 'sonner';
+
+export default function SettingsPanel() {
+  const [settings, setSettings] = useState({
+    theme: 'blue',
+    user_name: 'User',
+    pin_enabled: false
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({});
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+
+  useEffect(() => {
+    loadSettings();
+    loadStats();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setIsLoading(true);
+      const [theme, userName, pinEnabled] = await Promise.all([
+        dbOperations.getSetting('theme'),
+        dbOperations.getSetting('user_name'),
+        dbOperations.getSetting('pin_enabled')
+      ]);
+      
+      setSettings({
+        theme: theme || 'blue',
+        user_name: userName || 'User',
+        pin_enabled: pinEnabled || false
+      });
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast.error('Failed to load settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const [projects, tasks, timeEntries] = await Promise.all([
+        dbOperations.getProjects(),
+        dbOperations.getTasks(),
+        dbOperations.getTimeEntries()
+      ]);
+      
+      setStats({
+        projects: projects.length,
+        tasks: tasks.length,
+        timeEntries: timeEntries.length,
+        storageSize: await getStorageSize()
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const getStorageSize = async () => {
+    try {
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        const estimate = await navigator.storage.estimate();
+        const used = estimate.usage || 0;
+        return (used / 1024 / 1024).toFixed(2); // MB
+      }
+    } catch (error) {
+      console.error('Error getting storage size:', error);
+    }
+    return 'Unknown';
+  };
+
+  const handleThemeChange = async (theme) => {
+    try {
+      await ThemeManager.setTheme(theme);
+      setSettings(prev => ({ ...prev, theme }));
+      toast.success('Theme updated successfully!');
+    } catch (error) {
+      console.error('Error updating theme:', error);
+      toast.error('Failed to update theme');
+    }
+  };
+
+  const handleUserNameChange = async (userName) => {
+    try {
+      await dbOperations.setSetting('user_name', userName);
+      setSettings(prev => ({ ...prev, user_name: userName }));
+      toast.success('Name updated successfully!');
+    } catch (error) {
+      console.error('Error updating user name:', error);
+      toast.error('Failed to update name');
+    }
+  };
+
+  const handlePinSetup = async () => {
+    if (newPin.length < 4) {
+      toast.error('PIN must be at least 4 digits');
+      return;
+    }
+    
+    if (newPin !== confirmPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+
+    try {
+      await LocalAuth.setUpPin(newPin);
+      setSettings(prev => ({ ...prev, pin_enabled: true }));
+      setIsPinDialogOpen(false);
+      setNewPin('');
+      setConfirmPin('');
+      toast.success('PIN setup successfully!');
+    } catch (error) {
+      console.error('Error setting up PIN:', error);
+      toast.error('Failed to setup PIN');
+    }
+  };
+
+  const handleDisablePin = async () => {
+    if (!confirm('Are you sure you want to disable PIN protection?')) {
+      return;
+    }
+
+    try {
+      await LocalAuth.disablePin();
+      setSettings(prev => ({ ...prev, pin_enabled: false }));
+      toast.success('PIN protection disabled');
+    } catch (error) {
+      console.error('Error disabling PIN:', error);
+      toast.error('Failed to disable PIN');
+    }
+  };
+
+  const exportData = async () => {
+    try {
+      const [projects, tasks, timeEntries, settings] = await Promise.all([
+        dbOperations.getProjects(),
+        dbOperations.getTasks(),
+        dbOperations.getTimeEntries(),
+        Promise.all([
+          dbOperations.getSetting('theme'),
+          dbOperations.getSetting('user_name')
+        ])
+      ]);
+
+      const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        data: {
+          projects,
+          tasks,
+          timeEntries,
+          settings: {
+            theme: settings[0],
+            user_name: settings[1]
+          }
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `taskora-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setIsExportDialogOpen(false);
+      toast.success('Data exported successfully!');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const importData = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const importData = JSON.parse(text);
+
+      if (!importData.data || !importData.version) {
+        throw new Error('Invalid backup file format');
+      }
+
+      if (!confirm('This will replace all your existing data. Are you sure you want to continue?')) {
+        return;
+      }
+
+      // Clear existing data
+      const db = await import('../lib/database').then(m => m.default);
+      await db.transaction('rw', [db.projects, db.tasks, db.time_entries, db.settings], async () => {
+        await db.projects.clear();
+        await db.tasks.clear();
+        await db.time_entries.clear();
+        
+        // Import new data
+        if (importData.data.projects?.length) {
+          await db.projects.bulkAdd(importData.data.projects);
+        }
+        if (importData.data.tasks?.length) {
+          await db.tasks.bulkAdd(importData.data.tasks);
+        }
+        if (importData.data.timeEntries?.length) {
+          await db.time_entries.bulkAdd(importData.data.timeEntries);
+        }
+        
+        // Import settings
+        if (importData.data.settings) {
+          await dbOperations.setSetting('theme', importData.data.settings.theme || 'blue');
+          await dbOperations.setSetting('user_name', importData.data.settings.user_name || 'User');
+        }
+      });
+
+      toast.success('Data imported successfully! Please refresh the page.');
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Failed to import data. Please check the file format.');
+    }
+
+    // Reset file input
+    event.target.value = '';
+  };
+
+  const clearAllData = async () => {
+    if (!confirm('Are you sure you want to delete ALL data? This action cannot be undone.')) {
+      return;
+    }
+
+    if (!confirm('This will permanently delete all projects, tasks, and time entries. Type "DELETE" to confirm:')) {
+      return;
+    }
+
+    try {
+      const db = await import('../lib/database').then(m => m.default);
+      await db.transaction('rw', [db.projects, db.tasks, db.time_entries], async () => {
+        await db.projects.clear();
+        await db.tasks.clear();
+        await db.time_entries.clear();
+      });
+
+      toast.success('All data cleared successfully');
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      console.error('Clear data error:', error);
+      toast.error('Failed to clear data');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold">Settings</h2>
+        <p className="text-muted-foreground">Customize your Taskora experience</p>
+      </div>
+
+      {/* Appearance */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Palette className="h-5 w-5" />
+            <span>Appearance</span>
+          </CardTitle>
+          <CardDescription>
+            Customize the look and feel of your workspace
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Theme</Label>
+            <Select value={settings.theme} onValueChange={handleThemeChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(ThemeManager.themes).map(([key, theme]) => (
+                  <SelectItem key={key} value={key}>
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ background: theme['--gradient'] }}
+                      ></div>
+                      <span>{theme.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Display Name</Label>
+            <Input
+              placeholder="Enter your name"
+              value={settings.user_name}
+              onChange={(e) => handleUserNameChange(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Shield className="h-5 w-5" />
+            <span>Security</span>
+          </CardTitle>
+          <CardDescription>
+            Manage your workspace security settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">PIN Protection</Label>
+              <p className="text-sm text-muted-foreground">
+                {settings.pin_enabled 
+                  ? 'Your workspace is protected with a PIN' 
+                  : 'Add a PIN to secure your workspace'
+                }
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              {settings.pin_enabled ? (
+                <>
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    Enabled
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={handleDisablePin}>
+                    Disable
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Badge variant="outline">Disabled</Badge>
+                  <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="gradient-bg text-white hover:opacity-90">
+                        Setup PIN
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="glass-card border-0">
+                      <DialogHeader>
+                        <DialogTitle>Setup PIN Protection</DialogTitle>
+                        <DialogDescription>
+                          Create a PIN to secure your workspace
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>New PIN</Label>
+                          <Input
+                            type="password"
+                            placeholder="Enter 4-digit PIN"
+                            value={newPin}
+                            onChange={(e) => setNewPin(e.target.value)}
+                            maxLength={6}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Confirm PIN</Label>
+                          <Input
+                            type="password"
+                            placeholder="Confirm your PIN"
+                            value={confirmPin}
+                            onChange={(e) => setConfirmPin(e.target.value)}
+                            maxLength={6}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                          setIsPinDialogOpen(false);
+                          setNewPin('');
+                          setConfirmPin('');
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handlePinSetup} className="gradient-bg text-white hover:opacity-90">
+                          Setup PIN
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Management */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Database className="h-5 w-5" />
+            <span>Data Management</span>
+          </CardTitle>
+          <CardDescription>
+            Backup, restore, and manage your local data
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Data Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 glass rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.projects}</div>
+              <div className="text-sm text-muted-foreground">Projects</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.tasks}</div>
+              <div className="text-sm text-muted-foreground">Tasks</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.timeEntries}</div>
+              <div className="text-sm text-muted-foreground">Time Entries</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.storageSize}</div>
+              <div className="text-sm text-muted-foreground">MB Used</div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Backup & Restore */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base">Export Data</Label>
+                <p className="text-sm text-muted-foreground">Download a backup of all your data</p>
+              </div>
+              <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="glass-card border-0">
+                  <DialogHeader>
+                    <DialogTitle>Export Data</DialogTitle>
+                    <DialogDescription>
+                      This will download a JSON file containing all your projects, tasks, and time entries.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={exportData} className="gradient-bg text-white hover:opacity-90">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Backup
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base">Import Data</Label>
+                <p className="text-sm text-muted-foreground">Restore from a backup file</p>
+              </div>
+              <div>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importData}
+                  className="hidden"
+                  id="import-file"
+                />
+                <Button variant="outline" onClick={() => document.getElementById('import-file')?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import
+                </Button>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base text-red-600">Clear All Data</Label>
+                <p className="text-sm text-muted-foreground">Permanently delete all your data</p>
+              </div>
+              <Button variant="destructive" onClick={clearAllData}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* App Info */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Info className="h-5 w-5" />
+            <span>About</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Version:</span>
+            <span>1.0.0</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Storage:</span>
+            <span>Local (IndexedDB)</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Data Privacy:</span>
+            <span className="text-green-600">100% Local</span>
+          </div>
+          <Separator />
+          <p className="text-sm text-muted-foreground">
+            Taskora is a local-first PWA. All your data stays on your device and never leaves it.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
