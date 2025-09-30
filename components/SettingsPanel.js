@@ -41,16 +41,22 @@ export default function SettingsPanel() {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
-      const [theme, userName, pinEnabled] = await Promise.all([
+      const [theme, userName, pinEnabled, notificationsEnabled, deadlineNotifications, overdueNotifications] = await Promise.all([
         dbOperations.getSetting('theme'),
         dbOperations.getSetting('user_name'),
-        LocalAuth.isSetUp()
+        LocalAuth.isSetUp(),
+        dbOperations.getSetting('notifications_enabled'),
+        dbOperations.getSetting('deadline_notifications'),
+        dbOperations.getSetting('overdue_notifications')
       ]);
       
       setSettings({
         theme: theme || 'blue',
         user_name: userName || 'User',
-        pin_enabled: pinEnabled
+        pin_enabled: pinEnabled,
+        notifications_enabled: notificationsEnabled !== false,
+        deadline_notifications: deadlineNotifications !== false,
+        overdue_notifications: overdueNotifications !== false
       });
     } catch (error) {
       console.error('Error loading settings:', error);
