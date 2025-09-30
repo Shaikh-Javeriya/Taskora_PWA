@@ -342,80 +342,39 @@ export default function SettingsPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-base">PIN Protection</Label>
-              <p className="text-sm text-muted-foreground">
-                {settings.pin_enabled 
-                  ? 'Your workspace is protected with a PIN' 
-                  : 'Add a PIN to secure your workspace'
-                }
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {settings.pin_enabled ? (
-                <>
-                  <Badge variant="outline" className="text-green-600 border-green-600">
-                    Enabled
-                  </Badge>
-                  <Button variant="outline" size="sm" onClick={handleDisablePin}>
-                    Disable
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Badge variant="outline">Disabled</Badge>
-                  <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gradient-bg text-white hover:opacity-90">
-                        Setup PIN
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card border-0">
-                      <DialogHeader>
-                        <DialogTitle>Setup PIN Protection</DialogTitle>
-                        <DialogDescription>
-                          Create a PIN to secure your workspace
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>New PIN</Label>
-                          <Input
-                            type="password"
-                            placeholder="Enter 4-digit PIN"
-                            value={newPin}
-                            onChange={(e) => setNewPin(e.target.value)}
-                            maxLength={6}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Confirm PIN</Label>
-                          <Input
-                            type="password"
-                            placeholder="Confirm your PIN"
-                            value={confirmPin}
-                            onChange={(e) => setConfirmPin(e.target.value)}
-                            maxLength={6}
-                          />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => {
-                          setIsPinDialogOpen(false);
-                          setNewPin('');
-                          setConfirmPin('');
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handlePinSetup} className="gradient-bg text-white hover:opacity-90">
-                          Setup PIN
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </>
-              )}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-base">PIN Protection</Label>
+                <p className="text-sm text-muted-foreground">
+                  {settings.pin_enabled 
+                    ? 'Your workspace is protected with a PIN' 
+                    : 'Add a PIN to secure your workspace'
+                  }
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                {settings.pin_enabled ? (
+                  <>
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      Enabled
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={() => setIsPinDialogOpen(true)}>
+                      Change PIN
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleDisablePin}>
+                      Disable
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Badge variant="outline">Disabled</Badge>
+                    <Button size="sm" className="gradient-bg text-white hover:opacity-90" onClick={() => setIsPinDialogOpen(true)}>
+                      Setup PIN
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
