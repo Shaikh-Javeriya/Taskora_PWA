@@ -18,6 +18,9 @@ export default function App() {
   useEffect(() => {
     const initialize = async () => {
       try {
+        // Initialize PWA service worker
+        await PWAManager.registerServiceWorker();
+        
         // Initialize database and theme
         await initializeDatabase();
         await ThemeManager.initializeTheme();
@@ -39,6 +42,23 @@ export default function App() {
             description: 'Your local-first project management dashboard is ready.'
           });
           await dbOperations.setSetting('first_launch', false);
+          
+          // Request notification permission on first launch
+          if (window.Notification && Notification.permission === 'default') {
+            setTimeout(async () => {
+              const granted = await PWAManager.requestNotificationPermission();
+              if (granted) {
+                toast.success('Notifications enabled!', {
+                  description: 'You\'ll receive reminders for upcoming deadlines.'
+                });
+              }
+            }, 3000);
+          }
+        }
+        
+        // Schedule deadline notifications
+        if (window.Notification && Notification.permission === 'granted') {
+          await PWAManager.scheduleDeadlineNotifications();
         }
         
       } catch (error) {
