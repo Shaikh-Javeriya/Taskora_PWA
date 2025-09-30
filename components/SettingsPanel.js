@@ -400,6 +400,89 @@ export default function SettingsPanel() {
         </CardContent>
       </Card>
 
+      {/* Notifications */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Notifications</span>
+          </CardTitle>
+          <CardDescription>
+            Manage your notification preferences
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">Enable Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Allow Taskora to send push notifications
+              </p>
+            </div>
+            <Switch
+              checked={settings.notifications_enabled}
+              onCheckedChange={async (checked) => {
+                if (checked && window.Notification) {
+                  const permission = await Notification.requestPermission();
+                  if (permission === 'granted') {
+                    await dbOperations.setSetting('notifications_enabled', true);
+                    setSettings(prev => ({ ...prev, notifications_enabled: true }));
+                    toast.success('Notifications enabled!');
+                  } else {
+                    toast.error('Notification permission denied');
+                  }
+                } else {
+                  await dbOperations.setSetting('notifications_enabled', false);
+                  setSettings(prev => ({ ...prev, notifications_enabled: false }));
+                  toast.success('Notifications disabled');
+                }
+              }}
+            />
+          </div>
+
+          {settings.notifications_enabled && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Deadline Reminders</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified about upcoming task deadlines
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.deadline_notifications}
+                    onCheckedChange={async (checked) => {
+                      await dbOperations.setSetting('deadline_notifications', checked);
+                      setSettings(prev => ({ ...prev, deadline_notifications: checked }));
+                      toast.success(checked ? 'Deadline reminders enabled' : 'Deadline reminders disabled');
+                    }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Overdue Task Alerts</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified about overdue tasks
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.overdue_notifications}
+                    onCheckedChange={async (checked) => {
+                      await dbOperations.setSetting('overdue_notifications', checked);
+                      setSettings(prev => ({ ...prev, overdue_notifications: checked }));
+                      toast.success(checked ? 'Overdue alerts enabled' : 'Overdue alerts disabled');
+                    }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Data Management */}
       <Card className="glass-card border-0">
         <CardHeader>
