@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Calendar, Clock, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import TimeTracker from './TimeTracker';
 
 const STATUSES = [
   { id: 'todo', label: 'To Do', color: 'bg-gray-100 border-gray-300' },
