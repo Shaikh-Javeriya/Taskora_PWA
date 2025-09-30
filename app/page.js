@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { initializeDatabase, dbOperations } from '../lib/database';
 import { LocalAuth, ThemeManager } from '../lib/auth';
+import { PWAManager } from '../lib/pwa';
 import Dashboard from '../components/Dashboard';
 import AuthScreen from '../components/AuthScreen';
 import { Toaster } from '@/components/ui/sonner';
