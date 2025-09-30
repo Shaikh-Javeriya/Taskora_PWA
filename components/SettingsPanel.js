@@ -112,41 +112,44 @@ export default function SettingsPanel() {
   };
 
   const handlePinSetup = async () => {
-    if (newPin.length < 4) {
-      toast.error('PIN must be at least 4 digits');
-      return;
-    }
-    
-    if (newPin !== confirmPin) {
-      toast.error('PINs do not match');
-      return;
-    }
-
     try {
-      await LocalAuth.setUpPin(newPin);
+      if (isChangingPin) {
+        // Change existing PIN
+        await LocalAuth.changePin(oldPin, newPin, confirmPin);
+        toast.success('PIN changed successfully!');
+      } else {
+        // Setup new PIN
+        await LocalAuth.setUpPin(newPin, confirmPin);
+        toast.success('PIN setup successfully!');
+      }
+      
       setSettings(prev => ({ ...prev, pin_enabled: true }));
       setIsPinDialogOpen(false);
+      setOldPin('');
       setNewPin('');
       setConfirmPin('');
-      toast.success('PIN setup successfully!');
+      setIsChangingPin(false);
     } catch (error) {
-      console.error('Error setting up PIN:', error);
-      toast.error('Failed to setup PIN');
+      console.error('Error with PIN:', error);
+      toast.error(error.message || 'PIN operation failed');
     }
   };
 
   const handleDisablePin = async () => {
-    if (!confirm('Are you sure you want to disable PIN protection?')) {
+    if (!confirm('Are you sure you want to disable PIN protection? You will need to enter your current PIN.')) {
       return;
     }
 
+    const currentPin = prompt('Enter your current PIN to disable protection:');
+    if (!currentPin) return;
+
     try {
-      await LocalAuth.disablePin();
+      await LocalAuth.disablePin(currentPin);
       setSettings(prev => ({ ...prev, pin_enabled: false }));
       toast.success('PIN protection disabled');
     } catch (error) {
       console.error('Error disabling PIN:', error);
-      toast.error('Failed to disable PIN');
+      toast.error(error.message || 'Failed to disable PIN');
     }
   };
 
