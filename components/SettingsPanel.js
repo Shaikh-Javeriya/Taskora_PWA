@@ -23,9 +23,11 @@ export default function SettingsPanel() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({});
+  const [oldPin, setOldPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+  const [isChangingPin, setIsChangingPin] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   useEffect(() => {
