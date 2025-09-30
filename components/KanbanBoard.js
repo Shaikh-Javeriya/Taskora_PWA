@@ -438,6 +438,9 @@ export default function KanbanBoard({ onUpdate }) {
                           </div>
                         )}
                         
+                        {/* Time Tracker */}
+                        <TimeTracker taskId={task.id} compact={true} />
+                        
                         {/* Status Change Buttons */}
                         <div className="flex space-x-1 pt-2">
                           {STATUSES.filter(s => s.id !== task.status).map((targetStatus) => (
