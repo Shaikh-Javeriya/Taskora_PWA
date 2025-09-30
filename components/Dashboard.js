@@ -207,7 +207,7 @@ export default function Dashboard({ onLogout }) {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="glass-card border-0">
                 <CardHeader>
                   <CardTitle>Task Status Distribution</CardTitle>
@@ -229,6 +229,32 @@ export default function Dashboard({ onLogout }) {
                         ))}
                       </Pie>
                       <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass-card border-0">
+                <CardHeader>
+                  <CardTitle>Billable vs Non-billable Hours</CardTitle>
+                  <CardDescription>Time tracking breakdown</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={analytics.hoursData || []}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}h`}
+                      >
+                        {(analytics.hoursData || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${value}h`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
