@@ -522,6 +522,91 @@ export default function SettingsPanel() {
           </p>
         </CardContent>
       </Card>
+
+      {/* PIN Setup/Change Dialog */}
+      <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
+        <DialogContent className="glass-card border-0">
+          <DialogHeader>
+            <DialogTitle>
+              {isChangingPin ? 'Change PIN' : 'Setup PIN Protection'}
+            </DialogTitle>
+            <DialogDescription>
+              {isChangingPin 
+                ? 'Enter your current PIN and create a new one'
+                : 'Create a PIN to secure your workspace'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {isChangingPin && (
+              <div className="space-y-2">
+                <Label>Current PIN</Label>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="Enter current PIN"
+                  value={oldPin}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 6) setOldPin(value);
+                  }}
+                  className="text-center text-lg tracking-wider"
+                />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label>New PIN (4-6 digits)</Label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                placeholder="Enter new PIN"
+                value={newPin}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 6) setNewPin(value);
+                }}
+                className="text-center text-lg tracking-wider"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Confirm PIN</Label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                placeholder="Confirm new PIN"
+                value={confirmPin}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 6) setConfirmPin(value);
+                }}
+                className="text-center text-lg tracking-wider"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsPinDialogOpen(false);
+              setOldPin('');
+              setNewPin('');
+              setConfirmPin('');
+              setIsChangingPin(false);
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePinSetup} 
+              className="gradient-bg text-white hover:opacity-90"
+              disabled={!newPin || !confirmPin || (isChangingPin && !oldPin)}
+            >
+              {isChangingPin ? 'Change PIN' : 'Setup PIN'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
