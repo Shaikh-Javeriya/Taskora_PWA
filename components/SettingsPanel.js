@@ -364,7 +364,10 @@ export default function SettingsPanel() {
                     <Badge variant="outline" className="text-green-600 border-green-600">
                       Enabled
                     </Badge>
-                    <Button variant="outline" size="sm" onClick={() => setIsPinDialogOpen(true)}>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setIsChangingPin(true);
+                      setIsPinDialogOpen(true);
+                    }}>
                       Change PIN
                     </Button>
                     <Button variant="outline" size="sm" onClick={handleDisablePin}>
