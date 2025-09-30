@@ -99,10 +99,10 @@ export default function App() {
     );
   }
 
-  if (needsAuth || !isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <>
-        <AuthScreen onAuthenticated={handleAuthenticated} isFirstLaunch={isFirstLaunch} />
+        <AuthScreen onAuthenticated={handleAuthenticated} needsSetup={needsSetup} />
         <Toaster />
       </>
     );
