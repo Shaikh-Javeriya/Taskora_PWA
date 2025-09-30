@@ -19,7 +19,10 @@ export default function SettingsPanel() {
   const [settings, setSettings] = useState({
     theme: 'blue',
     user_name: 'User',
-    pin_enabled: false
+    pin_enabled: false,
+    notifications_enabled: false,
+    deadline_notifications: true,
+    overdue_notifications: true
   });
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({});
