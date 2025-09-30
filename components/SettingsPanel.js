@@ -41,13 +41,13 @@ export default function SettingsPanel() {
       const [theme, userName, pinEnabled] = await Promise.all([
         dbOperations.getSetting('theme'),
         dbOperations.getSetting('user_name'),
-        dbOperations.getSetting('pin_enabled')
+        LocalAuth.isSetUp()
       ]);
       
       setSettings({
         theme: theme || 'blue',
         user_name: userName || 'User',
-        pin_enabled: pinEnabled || false
+        pin_enabled: pinEnabled
       });
     } catch (error) {
       console.error('Error loading settings:', error);
