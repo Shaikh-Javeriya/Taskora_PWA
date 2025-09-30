@@ -374,7 +374,10 @@ export default function SettingsPanel() {
                 ) : (
                   <>
                     <Badge variant="outline">Disabled</Badge>
-                    <Button size="sm" className="gradient-bg text-white hover:opacity-90" onClick={() => setIsPinDialogOpen(true)}>
+                    <Button size="sm" className="gradient-bg text-white hover:opacity-90" onClick={() => {
+                      setIsChangingPin(false);
+                      setIsPinDialogOpen(true);
+                    }}>
                       Setup PIN
                     </Button>
                   </>
