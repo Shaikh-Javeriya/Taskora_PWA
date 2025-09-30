@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import ProjectManager from './ProjectManager';
 import KanbanBoard from './KanbanBoard';
 import SettingsPanel from './SettingsPanel';
+import TimeTracker from './TimeTracker';
 
 export default function Dashboard({ onLogout }) {
   const [activeTab, setActiveTab] = useState('overview');
