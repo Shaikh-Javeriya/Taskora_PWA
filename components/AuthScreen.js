@@ -283,6 +283,25 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                       Forgot PIN?
                     </Button>
                   )}
+                  
+                  {mode === 'setup' && !enablePin && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          await LocalAuth.createSession(true);
+                          onAuthenticated();
+                        } catch (error) {
+                          console.error('Skip PIN error:', error);
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      Skip PIN Setup
+                    </Button>
+                  )}
                 </div>
               </form>
             )}
