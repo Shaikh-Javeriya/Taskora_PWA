@@ -12,8 +12,7 @@ import { toast } from 'sonner';
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [needsAuth, setNeedsAuth] = useState(false);
-  const [isFirstLaunch, setIsFirstLaunch] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
@@ -25,39 +24,40 @@ export default function App() {
         await initializeDatabase();
         await ThemeManager.initializeTheme();
         
-        // Check if this is first launch
-        const firstLaunch = await dbOperations.getSetting('first_launch');
-        setIsFirstLaunch(firstLaunch === true);
-        
         // Check authentication status
         const pinSetUp = await LocalAuth.isSetUp();
-        const authenticated = LocalAuth.isAuthenticated();
+        const authenticated = await LocalAuth.isAuthenticated();
         
-        setNeedsAuth(pinSetUp && !authenticated);
-        setIsAuthenticated(!pinSetUp || authenticated);
+        setNeedsSetup(!pinSetUp);
+        setIsAuthenticated(authenticated);
         
-        // Show welcome message on first launch
+        // Check if this is first launch
+        const firstLaunch = await dbOperations.getSetting('first_launch');
         if (firstLaunch === true) {
-          toast.success('Welcome to Taskora!', {
-            description: 'Your local-first project management dashboard is ready.'
-          });
           await dbOperations.setSetting('first_launch', false);
           
-          // Request notification permission on first launch
-          if (window.Notification && Notification.permission === 'default') {
-            setTimeout(async () => {
-              const granted = await PWAManager.requestNotificationPermission();
-              if (granted) {
-                toast.success('Notifications enabled!', {
-                  description: 'You\'ll receive reminders for upcoming deadlines.'
-                });
-              }
-            }, 3000);
+          // Only show welcome if user is authenticated (either no PIN or valid session)
+          if (authenticated || !pinSetUp) {
+            toast.success('Welcome to Taskora!', {
+              description: 'Your local-first project management dashboard is ready.'
+            });
+            
+            // Request notification permission on first launch
+            if (window.Notification && Notification.permission === 'default') {
+              setTimeout(async () => {
+                const granted = await PWAManager.requestNotificationPermission();
+                if (granted) {
+                  toast.success('Notifications enabled!', {
+                    description: 'You\'ll receive reminders for upcoming deadlines.'
+                  });
+                }
+              }, 3000);
+            }
           }
         }
         
-        // Schedule deadline notifications
-        if (window.Notification && Notification.permission === 'granted') {
+        // Schedule deadline notifications if authenticated
+        if (authenticated && window.Notification && Notification.permission === 'granted') {
           await PWAManager.scheduleDeadlineNotifications();
         }
         
@@ -76,14 +76,14 @@ export default function App() {
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
-    setNeedsAuth(false);
+    setNeedsSetup(false);
   };
 
   const handleLogout = async () => {
     await LocalAuth.logout();
     setIsAuthenticated(false);
     const pinSetUp = await LocalAuth.isSetUp();
-    setNeedsAuth(pinSetUp);
+    setNeedsSetup(!pinSetUp);
   };
 
   if (isLoading) {
