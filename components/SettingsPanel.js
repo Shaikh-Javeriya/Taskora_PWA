@@ -468,7 +468,7 @@ export default function SettingsPanel() {
               <div>
                 <input
                   type="file"
-                  accept=".csv,.json"
+                  accept=".json,.csv"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
