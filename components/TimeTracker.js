@@ -118,12 +118,12 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
 
       await dbOperations.updateTimeEntry(activeTimer.id, {
         end_time: endTime,
-        duration: Math.round(duration * 100) / 100 // Round to 2 decimals
+        duration: durationHours
       });
 
       setActiveTimer(null);
       setElapsedTime(0);
-      toast.success(`Timer stopped! Logged ${Math.round(duration * 100) / 100} hours`);
+      toast.success(`Timer stopped! Logged ${durationHours} hours`);
 
       await loadData();
     } catch (error) {
