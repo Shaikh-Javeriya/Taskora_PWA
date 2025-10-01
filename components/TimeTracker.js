@@ -39,7 +39,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
     if (activeTimer) {
       interval = setInterval(() => {
         const now = new Date();
-        const elapsed = (now - new Date(activeTimer.start_time)) / 1000 / 3600; // hours
+        const elapsed = Math.floor((now - new Date(activeTimer.start_time)) / 1000); // seconds
         setElapsedTime(elapsed);
       }, 1000);
     }
@@ -53,16 +53,16 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
         taskId ? [await dbOperations.getTask(taskId)] : dbOperations.getTasks(projectId),
         dbOperations.getTimeEntries(taskId, projectId)
       ]);
-      
+
       setProjects(projectsData);
       setTasks(tasksData.filter(Boolean));
       setTimeEntries(entriesData);
-      
+
       // Check for active timer
       const active = entriesData.find(entry => !entry.end_time);
       setActiveTimer(active);
       if (active) {
-        const elapsed = (new Date() - new Date(active.start_time)) / 1000 / 3600;
+        const elapsed = Math.floor((new Date() - new Date(active.start_time)) / 1000);
         setElapsedTime(elapsed);
       }
     } catch (error) {
@@ -74,17 +74,17 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
     try {
       const targetTaskId = selectedTaskId || taskId;
       const targetProjectId = projectId;
-      
+
       if (!targetTaskId && !targetProjectId) {
         toast.error('Please select a task or project to track time');
         return;
       }
-      
+
       // Stop any existing timer
       if (activeTimer) {
         await stopTimer();
       }
-      
+
       const timeEntry = {
         task_id: targetTaskId,
         project_id: targetProjectId || (targetTaskId ? tasks.find(t => t.id === targetTaskId)?.project_id : null),
@@ -92,14 +92,14 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
         description: '',
         billable: true
       };
-      
+
       const entryId = await dbOperations.createTimeEntry(timeEntry);
       const newEntry = { ...timeEntry, id: entryId };
-      
+
       setActiveTimer(newEntry);
       setElapsedTime(0);
       toast.success('Timer started!');
-      
+
       await loadData();
     } catch (error) {
       console.error('Error starting timer:', error);
@@ -110,19 +110,21 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
   const stopTimer = async () => {
     try {
       if (!activeTimer) return;
-      
+
       const endTime = new Date();
-      const duration = (endTime - new Date(activeTimer.start_time)) / 1000 / 3600; // hours
-      
+      const durationSeconds = Math.floor((endTime - new Date(activeTimer.start_time)) / 1000);
+      const durationHours = Math.round((durationSeconds / 3600) * 100) / 100; // keep hours for DB
+
+
       await dbOperations.updateTimeEntry(activeTimer.id, {
         end_time: endTime,
         duration: Math.round(duration * 100) / 100 // Round to 2 decimals
       });
-      
+
       setActiveTimer(null);
       setElapsedTime(0);
       toast.success(`Timer stopped! Logged ${Math.round(duration * 100) / 100} hours`);
-      
+
       await loadData();
     } catch (error) {
       console.error('Error stopping timer:', error);
@@ -136,13 +138,13 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
         toast.error('Please fill in task and duration');
         return;
       }
-      
+
       const duration = parseFloat(logForm.duration);
       if (isNaN(duration) || duration <= 0) {
         toast.error('Please enter a valid duration');
         return;
       }
-      
+
       const timeEntry = {
         task_id: parseInt(logForm.task_id),
         project_id: parseInt(logForm.project_id) || tasks.find(t => t.id === parseInt(logForm.task_id))?.project_id,
@@ -152,9 +154,9 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
         description: logForm.description.trim(),
         billable: logForm.billable
       };
-      
+
       await dbOperations.createTimeEntry(timeEntry);
-      
+
       setIsLogDialogOpen(false);
       setLogForm({
         task_id: taskId || '',
@@ -164,7 +166,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
         billable: true,
         date: new Date().toISOString().split('T')[0]
       });
-      
+
       toast.success(`Logged ${duration} hours successfully!`);
       await loadData();
     } catch (error) {
@@ -177,7 +179,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
     if (!confirm('Are you sure you want to delete this time entry?')) {
       return;
     }
-    
+
     try {
       await dbOperations.deleteTimeEntry(entryId);
       toast.success('Time entry deleted');
@@ -188,10 +190,12 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
     }
   };
 
-  const formatTime = (hours) => {
-    const h = Math.floor(hours);
-    const m = Math.floor((hours % 1) * 60);
-    return `${h}:${m.toString().padStart(2, '0')}`;
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const formatDuration = (hours) => {
@@ -236,7 +240,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
             Start
           </Button>
         )}
-        
+
         <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="ghost" className="h-6 px-1">
@@ -261,7 +265,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                   onChange={(e) => setLogForm({ ...logForm, duration: e.target.value })}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea
@@ -271,7 +275,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                   rows={2}
                 />
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={logForm.billable}
@@ -349,8 +353,8 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                   ))}
                 </SelectContent>
               </Select>
-              
-              <Button 
+
+              <Button
                 onClick={() => startTimer(parseInt(logForm.task_id))}
                 disabled={!logForm.task_id}
                 className="gradient-bg text-white hover:opacity-90"
@@ -360,7 +364,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
               </Button>
             </div>
           )}
-          
+
           <div className="flex space-x-2">
             <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
               <DialogTrigger asChild>
@@ -392,7 +396,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Duration (hours)</Label>
@@ -404,7 +408,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                         onChange={(e) => setLogForm({ ...logForm, duration: e.target.value })}
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Date</Label>
                       <Input
@@ -414,7 +418,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Description</Label>
                     <Textarea
@@ -424,7 +428,7 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
                       rows={3}
                     />
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       checked={logForm.billable}

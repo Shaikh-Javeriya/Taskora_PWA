@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Palette, Shield, Download, Upload, Trash2, Database, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportCSV, exportJSON, importCSV, importJSON } from "../lib/utils";
 
 export default function SettingsPanel() {
   const [settings, setSettings] = useState({
@@ -49,7 +50,7 @@ export default function SettingsPanel() {
         dbOperations.getSetting('deadline_notifications'),
         dbOperations.getSetting('overdue_notifications')
       ]);
-      
+
       setSettings({
         theme: theme || 'blue',
         user_name: userName || 'User',
@@ -73,7 +74,7 @@ export default function SettingsPanel() {
         dbOperations.getTasks(),
         dbOperations.getTimeEntries()
       ]);
-      
+
       setStats({
         projects: projects.length,
         tasks: tasks.length,
@@ -131,7 +132,7 @@ export default function SettingsPanel() {
         await LocalAuth.setUpPin(newPin, confirmPin);
         toast.success('PIN setup successfully!');
       }
-      
+
       setSettings(prev => ({ ...prev, pin_enabled: true }));
       setIsPinDialogOpen(false);
       setOldPin('');
@@ -160,102 +161,6 @@ export default function SettingsPanel() {
       console.error('Error disabling PIN:', error);
       toast.error(error.message || 'Failed to disable PIN');
     }
-  };
-
-  const exportData = async () => {
-    try {
-      const [projects, tasks, timeEntries, settings] = await Promise.all([
-        dbOperations.getProjects(),
-        dbOperations.getTasks(),
-        dbOperations.getTimeEntries(),
-        Promise.all([
-          dbOperations.getSetting('theme'),
-          dbOperations.getSetting('user_name')
-        ])
-      ]);
-
-      const exportData = {
-        version: '1.0',
-        exportDate: new Date().toISOString(),
-        data: {
-          projects,
-          tasks,
-          timeEntries,
-          settings: {
-            theme: settings[0],
-            user_name: settings[1]
-          }
-        }
-      };
-
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `taskora-backup-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      setIsExportDialogOpen(false);
-      toast.success('Data exported successfully!');
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error('Failed to export data');
-    }
-  };
-
-  const importData = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const importData = JSON.parse(text);
-
-      if (!importData.data || !importData.version) {
-        throw new Error('Invalid backup file format');
-      }
-
-      if (!confirm('This will replace all your existing data. Are you sure you want to continue?')) {
-        return;
-      }
-
-      // Clear existing data
-      const db = await import('../lib/database').then(m => m.default);
-      await db.transaction('rw', [db.projects, db.tasks, db.time_entries, db.settings], async () => {
-        await db.projects.clear();
-        await db.tasks.clear();
-        await db.time_entries.clear();
-        
-        // Import new data
-        if (importData.data.projects?.length) {
-          await db.projects.bulkAdd(importData.data.projects);
-        }
-        if (importData.data.tasks?.length) {
-          await db.tasks.bulkAdd(importData.data.tasks);
-        }
-        if (importData.data.timeEntries?.length) {
-          await db.time_entries.bulkAdd(importData.data.timeEntries);
-        }
-        
-        // Import settings
-        if (importData.data.settings) {
-          await dbOperations.setSetting('theme', importData.data.settings.theme || 'blue');
-          await dbOperations.setSetting('user_name', importData.data.settings.user_name || 'User');
-        }
-      });
-
-      toast.success('Data imported successfully! Please refresh the page.');
-      setTimeout(() => window.location.reload(), 2000);
-    } catch (error) {
-      console.error('Import error:', error);
-      toast.error('Failed to import data. Please check the file format.');
-    }
-
-    // Reset file input
-    event.target.value = '';
   };
 
   const clearAllData = async () => {
@@ -321,8 +226,8 @@ export default function SettingsPanel() {
                 {Object.entries(ThemeManager.themes).map(([key, theme]) => (
                   <SelectItem key={key} value={key}>
                     <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
+                      <div
+                        className="w-4 h-4 rounded-full"
                         style={{ background: theme['--gradient'] }}
                       ></div>
                       <span>{theme.name}</span>
@@ -332,7 +237,7 @@ export default function SettingsPanel() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Display Name</Label>
             <Input
@@ -361,8 +266,8 @@ export default function SettingsPanel() {
               <div className="space-y-0.5">
                 <Label className="text-base">PIN Protection</Label>
                 <p className="text-sm text-muted-foreground">
-                  {settings.pin_enabled 
-                    ? 'Your workspace is protected with a PIN' 
+                  {settings.pin_enabled
+                    ? 'Your workspace is protected with a PIN'
                     : 'Add a PIN to secure your workspace'
                   }
                 </p>
@@ -460,7 +365,7 @@ export default function SettingsPanel() {
                     }}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-base">Overdue Task Alerts</Label>
@@ -542,15 +447,19 @@ export default function SettingsPanel() {
                     <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={exportData} className="gradient-bg text-white hover:opacity-90">
+                    <Button onClick={exportCSV} variant="outline">
                       <Download className="h-4 w-4 mr-2" />
-                      Download Backup
+                      Export CSV
+                    </Button>
+                    <Button onClick={exportJSON} className="gradient-bg text-white hover:opacity-90">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export JSON (Backup)
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base">Import Data</Label>
@@ -559,8 +468,24 @@ export default function SettingsPanel() {
               <div>
                 <input
                   type="file"
-                  accept=".json"
-                  onChange={importData}
+                  accept=".csv,.json"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      if (file.name.endsWith('.json')) {
+                        await importJSON(file);
+                        toast.success('✅ JSON Import complete! Please refresh.');
+                      } else if (file.name.endsWith('.csv')) {
+                        await importCSV(file);
+                        toast.success('✅ CSV Import complete! Please refresh.');
+                      }
+                      setTimeout(() => window.location.reload(), 1500);
+                    } catch (err) {
+                      toast.error('❌ Import failed: ' + err.message);
+                    }
+                    e.target.value = '';
+                  }}
                   className="hidden"
                   id="import-file"
                 />
@@ -570,9 +495,9 @@ export default function SettingsPanel() {
                 </Button>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base text-red-600">Clear All Data</Label>
@@ -623,13 +548,13 @@ export default function SettingsPanel() {
               {isChangingPin ? 'Change PIN' : 'Setup PIN Protection'}
             </DialogTitle>
             <DialogDescription>
-              {isChangingPin 
+              {isChangingPin
                 ? 'Enter your current PIN and create a new one'
                 : 'Create a PIN to secure your workspace'
               }
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             {isChangingPin && (
               <div className="space-y-2">
@@ -647,7 +572,7 @@ export default function SettingsPanel() {
                 />
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label>New PIN (4-6 digits)</Label>
               <Input
@@ -662,7 +587,7 @@ export default function SettingsPanel() {
                 className="text-center text-lg tracking-wider"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>Confirm PIN</Label>
               <Input
@@ -678,7 +603,7 @@ export default function SettingsPanel() {
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setIsPinDialogOpen(false);
@@ -689,8 +614,8 @@ export default function SettingsPanel() {
             }}>
               Cancel
             </Button>
-            <Button 
-              onClick={handlePinSetup} 
+            <Button
+              onClick={handlePinSetup}
               className="gradient-bg text-white hover:opacity-90"
               disabled={!newPin || !confirmPin || (isChangingPin && !oldPin)}
             >
