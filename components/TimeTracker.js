@@ -209,4 +209,294 @@ export default function TimeTracker({ taskId = null, projectId = null, compact =
   };
 
   // --- rest of your JSX UI (unchanged) ---
+  if (compact) {
+    // Compact version for Kanban cards
+    return (
+      <div className="flex items-center space-x-2 mt-2">
+        {activeTimer && activeTimer.task_id === taskId ? (
+          <>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={stopTimer}
+              className="h-6 px-2"
+            >
+              <Square className="h-3 w-3 mr-1" />
+              {formatTime(elapsedTime)}
+            </Button>
+          </>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => startTimer(taskId)}
+            className="h-6 px-2"
+            disabled={!taskId}
+          >
+            <Play className="h-3 w-3 mr-1" />
+            Start
+          </Button>
+        )}
+
+        <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="ghost" className="h-6 px-1">
+              <Plus className="h-3 w-3" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="glass-card border-0">
+            <DialogHeader>
+              <DialogTitle>Log Time Manually</DialogTitle>
+              <DialogDescription>
+                Add time entry for completed work
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Duration (hours)</Label>
+                <Input
+                  type="number"
+                  step="0.25"
+                  placeholder="e.g. 2.5"
+                  value={logForm.duration}
+                  onChange={(e) => setLogForm({ ...logForm, duration: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  placeholder="What did you work on?"
+                  value={logForm.description}
+                  onChange={(e) => setLogForm({ ...logForm, description: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={logForm.billable}
+                  onCheckedChange={(checked) => setLogForm({ ...logForm, billable: checked })}
+                />
+                <Label>Billable</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsLogDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={logManualTime} className="gradient-bg text-white hover:opacity-90">
+                Log Time
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
+  // Full time tracker interface
+  return (
+    <div className="space-y-6">
+      {/* Active Timer Display */}
+      {activeTimer && (
+        <Card className="glass-card border-0 border-l-4 border-l-blue-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <div>
+                  <p className="font-medium">{getTaskName(activeTimer.task_id) || getProjectName(activeTimer.project_id)}</p>
+                  <p className="text-sm text-muted-foreground">{getProjectName(activeTimer.project_id)}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="text-lg font-mono">
+                  {formatTime(elapsedTime)}
+                </Badge>
+                <Button onClick={stopTimer} variant="destructive" size="sm">
+                  <Square className="h-4 w-4 mr-1" />
+                  Stop
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Timer Controls */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Clock className="h-5 w-5" />
+            <span>Time Tracker</span>
+          </CardTitle>
+          <CardDescription>
+            Track time for your tasks and projects
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!activeTimer && (
+            <div className="flex items-center space-x-2">
+              <Select value={logForm.task_id} onValueChange={(value) => setLogForm({ ...logForm, task_id: value })}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select task to track..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {tasks.map(task => (
+                    <SelectItem key={task.id} value={task.id.toString()}>
+                      {task.title} - {getProjectName(task.project_id)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={() => startTimer(parseInt(logForm.task_id))}
+                disabled={!logForm.task_id}
+                className="gradient-bg text-white hover:opacity-90"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start Timer
+              </Button>
+            </div>
+          )}
+
+          <div className="flex space-x-2">
+            <Dialog open={isLogDialogOpen} onOpenChange={setIsLogDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex-1">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Log Time Manually
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-card border-0">
+                <DialogHeader>
+                  <DialogTitle>Log Time Manually</DialogTitle>
+                  <DialogDescription>
+                    Add time entry for completed work
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Task</Label>
+                    <Select value={logForm.task_id} onValueChange={(value) => setLogForm({ ...logForm, task_id: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select task" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tasks.map(task => (
+                          <SelectItem key={task.id} value={task.id.toString()}>
+                            {task.title} - {getProjectName(task.project_id)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Duration (hours)</Label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        placeholder="e.g. 2.5"
+                        value={logForm.duration}
+                        onChange={(e) => setLogForm({ ...logForm, duration: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input
+                        type="date"
+                        value={logForm.date}
+                        onChange={(e) => setLogForm({ ...logForm, date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      placeholder="What did you work on?"
+                      value={logForm.description}
+                      onChange={(e) => setLogForm({ ...logForm, description: e.target.value })}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={logForm.billable}
+                      onCheckedChange={(checked) => setLogForm({ ...logForm, billable: checked })}
+                    />
+                    <Label>Billable time</Label>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsLogDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={logManualTime} className="gradient-bg text-white hover:opacity-90">
+                    Log Time
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Time Entries */}
+      <Card className="glass-card border-0">
+        <CardHeader>
+          <CardTitle>Recent Time Entries</CardTitle>
+          <CardDescription>Your logged hours and active sessions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {timeEntries.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No time entries yet</p>
+            ) : (
+              timeEntries.slice(0, 10).map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between p-3 glass rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{getTaskName(entry.task_id) || getProjectName(entry.project_id)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {entry.description || 'No description'}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(entry.start_time).toLocaleDateString()}
+                        </span>
+                        {entry.billable && (
+                          <Badge variant="outline" className="text-xs">Billable</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary">
+                      {entry.duration ? formatDuration(entry.duration) : 'Active'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteTimeEntry(entry.id)}
+                      className="h-8 w-8 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
