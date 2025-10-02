@@ -256,7 +256,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                           <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             className="absolute right-0 top-0 h-full px-3"
                             onClick={() => setShowConfirmPin(!showConfirmPin)}
                           >
