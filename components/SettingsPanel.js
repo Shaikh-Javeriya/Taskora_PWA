@@ -483,7 +483,8 @@ export default function SettingsPanel() {
                   <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>
-                      Restore your data from a CSV or JSON backup file.
+                      Use <strong>CSV</strong> for importing tasks/projects from spreadsheets.
+                      Use <strong>JSON</strong> for restoring full backups.
                     </DialogDescription>
                   </DialogHeader>
 
@@ -534,11 +535,6 @@ export default function SettingsPanel() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-
-              <p className="text-xs text-muted-foreground mt-2">
-                Use <strong>CSV</strong> for importing tasks/projects from spreadsheets.
-                Use <strong>JSON</strong> for restoring full backups.
-              </p>
             </div>
 
             <Separator />
