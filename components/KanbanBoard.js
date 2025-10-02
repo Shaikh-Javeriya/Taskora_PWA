@@ -60,9 +60,10 @@ export default function KanbanBoard({ onUpdate }) {
         dbOperations.getTasks(),
         dbOperations.getProjects()
       ]);
-      
-      setTasks(tasksData);
+
       setProjects(projectsData);
+      setTasks(tasksData);
+
     } catch (error) {
       console.error('Error loading kanban data:', error);
       toast.error('Failed to load kanban board');
@@ -73,12 +74,12 @@ export default function KanbanBoard({ onUpdate }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       toast.error('Task title is required');
       return;
     }
-    
+
     if (!formData.project_id) {
       toast.error('Please select a project');
       return;
@@ -168,10 +169,8 @@ export default function KanbanBoard({ onUpdate }) {
   };
 
   const getFilteredTasks = () => {
-    if (selectedProject === 'all') {
-      return tasks;
-    }
-    return tasks.filter(task => task.project_id === parseInt(selectedProject));
+    if (selectedProject === 'all') return tasks;
+    return tasks.filter(task => task.project_id === selectedProject);
   };
 
   const getTasksByStatus = (status) => {
@@ -208,22 +207,27 @@ export default function KanbanBoard({ onUpdate }) {
           <h2 className="text-2xl font-bold">Kanban Board</h2>
           <p className="text-muted-foreground">Manage tasks across different stages</p>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <Select value={selectedProject} onValueChange={setSelectedProject}>
+          <Select
+            value={selectedProject?.toString() ?? "all"}
+            onValueChange={(val) =>
+              val === "all" ? setSelectedProject("all") : setSelectedProject(Number(val))
+            }
+          >
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Projects</SelectItem>
-              {projects.map(project => (
+              {projects.map((project) => (
                 <SelectItem key={project.id} value={project.id.toString()}>
                   {project.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gradient-bg text-white hover:opacity-90">
@@ -231,20 +235,20 @@ export default function KanbanBoard({ onUpdate }) {
                 New Task
               </Button>
             </DialogTrigger>
-            
+
             <DialogContent className="glass-card border-0 max-w-md">
               <DialogHeader>
                 <DialogTitle>
                   {editingTask ? 'Edit Task' : 'Create New Task'}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingTask 
+                  {editingTask
                     ? 'Update your task details'
                     : 'Add a new task to your project'
                   }
                 </DialogDescription>
               </DialogHeader>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Task Title *</Label>
@@ -256,7 +260,7 @@ export default function KanbanBoard({ onUpdate }) {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
@@ -267,7 +271,7 @@ export default function KanbanBoard({ onUpdate }) {
                     rows={2}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="project">Project *</Label>
                   <Select value={formData.project_id} onValueChange={(value) => setFormData({ ...formData, project_id: value })}>
@@ -283,7 +287,7 @@ export default function KanbanBoard({ onUpdate }) {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="priority">Priority</Label>
@@ -300,7 +304,7 @@ export default function KanbanBoard({ onUpdate }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
@@ -317,7 +321,7 @@ export default function KanbanBoard({ onUpdate }) {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="deadline">Deadline</Label>
@@ -328,7 +332,7 @@ export default function KanbanBoard({ onUpdate }) {
                       onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="estimated_hours">Est. Hours</Label>
                     <Input
@@ -341,7 +345,7 @@ export default function KanbanBoard({ onUpdate }) {
                     />
                   </div>
                 </div>
-                
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => {
                     setIsDialogOpen(false);
@@ -364,7 +368,7 @@ export default function KanbanBoard({ onUpdate }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {STATUSES.map((status) => {
           const columnTasks = getTasksByStatus(status.id);
-          
+
           return (
             <div key={status.id} className="space-y-4">
               {/* Column Header */}
@@ -374,7 +378,7 @@ export default function KanbanBoard({ onUpdate }) {
                   <Badge variant="secondary">{columnTasks.length}</Badge>
                 </div>
               </div>
-              
+
               {/* Tasks */}
               <div className="space-y-3 min-h-[400px]">
                 {columnTasks.length === 0 ? (
@@ -383,9 +387,8 @@ export default function KanbanBoard({ onUpdate }) {
                   </div>
                 ) : (
                   columnTasks.map((task) => (
-                    <Card key={task.id} className={`glass-card border-0 hover:shadow-lg transition-shadow cursor-pointer ${
-                      isOverdue(task) ? 'border-l-4 border-l-red-500' : ''
-                    }`}>
+                    <Card key={task.id} className={`glass-card border-0 hover:shadow-lg transition-shadow cursor-pointer ${isOverdue(task) ? 'border-l-4 border-l-red-500' : ''
+                      }`}>
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-sm font-medium">{task.title}</CardTitle>
@@ -408,14 +411,14 @@ export default function KanbanBoard({ onUpdate }) {
                             </Button>
                           </div>
                         </div>
-                        
+
                         {task.description && (
                           <CardDescription className="text-xs">
                             {task.description}
                           </CardDescription>
                         )}
                       </CardHeader>
-                      
+
                       <CardContent className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Badge variant="outline" className="text-xs">
@@ -423,11 +426,10 @@ export default function KanbanBoard({ onUpdate }) {
                           </Badge>
                           <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
                         </div>
-                        
+
                         {task.deadline && (
-                          <div className={`flex items-center text-xs ${
-                            isOverdue(task) ? 'text-red-600' : 'text-muted-foreground'
-                          }`}>
+                          <div className={`flex items-center text-xs ${isOverdue(task) ? 'text-red-600' : 'text-muted-foreground'
+                            }`}>
                             {isOverdue(task) ? (
                               <AlertTriangle className="h-3 w-3 mr-1" />
                             ) : (
@@ -436,17 +438,17 @@ export default function KanbanBoard({ onUpdate }) {
                             {new Date(task.deadline).toLocaleDateString()}
                           </div>
                         )}
-                        
+
                         {task.estimated_hours && (
                           <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 mr-1" />
                             {task.estimated_hours}h estimated
                           </div>
                         )}
-                        
+
                         {/* Time Tracker */}
                         <TimeTracker taskId={task.id} compact={true} />
-                        
+
                         {/* Status Change Buttons */}
                         <div className="flex space-x-1 pt-2">
                           {STATUSES.filter(s => s.id !== task.status).map((targetStatus) => (
