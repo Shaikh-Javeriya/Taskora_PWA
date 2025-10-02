@@ -236,8 +236,8 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
 
                     {mode === 'setup' && enablePin && (
                       <div className="space-y-2">
+                        <Label htmlFor="confirmPin">Confirm PIN</Label>
                         <div className="relative">
-                          <Label htmlFor="confirmPin">Confirm PIN</Label>
                           <Input
                             id="confirmPin"
                             type={showConfirmPin ? 'text' : 'password'}
@@ -253,15 +253,6 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                             required
                             disabled={isLoading}
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={() => setShowConfirmPin(!showConfirmPin)}
-                          >
-                            {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
                         </div>
                       </div>
 

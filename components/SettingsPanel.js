@@ -463,8 +463,13 @@ export default function SettingsPanel() {
               </Dialog>
             </div>
 
-            <div className="mt-4">
-              <label className="block mb-2 font-medium">Import Data</label>
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                <Label className="text-base">Import Data</Label>
+                <p className="text-sm text-muted-foreground">
+                  Restore your data from a CSV or JSON backup file.
+                </p>
+              </div>
 
               {/* ===== Import Data (Dialog style to match Export) ===== */}
               <Dialog>
