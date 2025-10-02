@@ -236,31 +236,33 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
 
                     {mode === 'setup' && enablePin && (
                       <div className="space-y-2">
-                        <Label htmlFor="confirmPin">Confirm PIN</Label>
-                        <Input
-                          id="confirmPin"
-                          type={showConfirmPin ? 'text' : 'password'}
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          placeholder="Confirm your PIN"
-                          value={confirmPin}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
-                            if (value.length <= 6) setConfirmPin(value);
-                          }}
-                          className="text-center text-lg tracking-wider"
-                          required
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-2 top-1/2 -translate-y-1/2"
-                          onClick={() => setShowConfirmPin(!showConfirmPin)}
-                        >
-                          {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
+                        <div className="relative">
+                          <Label htmlFor="confirmPin">Confirm PIN</Label>
+                          <Input
+                            id="confirmPin"
+                            type={showConfirmPin ? 'text' : 'password'}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="Confirm your PIN"
+                            value={confirmPin}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              if (value.length <= 6) setConfirmPin(value);
+                            }}
+                            className="text-center text-lg tracking-wider"
+                            required
+                            disabled={isLoading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                            onClick={() => setShowConfirmPin(!showConfirmPin)}
+                          >
+                            {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </div>
 
                     )}

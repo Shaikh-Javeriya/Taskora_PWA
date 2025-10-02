@@ -162,10 +162,10 @@ export default function Dashboard({ onLogout }) {
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Calendar className="h-4 w-4 text-emerald-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.activeProjects || 0}</div>
+                  <div className="text-2xl font-bold text-emerald-600">{analytics.activeProjects || 0}</div>
                   <p className="text-xs text-muted-foreground">Currently in progress</p>
                 </CardContent>
               </Card>
@@ -173,10 +173,10 @@ export default function Dashboard({ onLogout }) {
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.completedTasks || 0}</div>
+                  <div className="text-2xl font-bold text-blue-600">{analytics.completedTasks || 0}</div>
                   <p className="text-xs text-muted-foreground">
                     {analytics.completionRate || 0}% completion rate
                   </p>
@@ -186,10 +186,10 @@ export default function Dashboard({ onLogout }) {
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Hours Worked</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Clock className="h-4 w-4 text-purple-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{analytics.totalHours || 0}h</div>
+                  <div className="text-2xl font-bold text-purple-600">{analytics.totalHours || 0}h</div>
                   <p className="text-xs text-muted-foreground">Total time tracked</p>
                 </CardContent>
               </Card>
@@ -197,7 +197,7 @@ export default function Dashboard({ onLogout }) {
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Overdue Tasks</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">{analytics.overdueTasks || 0}</div>
@@ -227,7 +227,7 @@ export default function Dashboard({ onLogout }) {
                       <Tooltip formatter={(value) => `${value}h`} />
                       <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                         {(analytics.hoursData || []).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
+                          <Cell key={`cell-${index}`} fill={`var(--accent-${(index % 4) + 1})`} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -254,7 +254,7 @@ export default function Dashboard({ onLogout }) {
                         label={({ name, value }) => `${name}: ${value}`}
                       >
                         {chartData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
+                          <Cell key={`cell-${index}`} fill={`var(--accent-${(index % 4) + 1})`} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -278,7 +278,7 @@ export default function Dashboard({ onLogout }) {
                       <Tooltip />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                         {projectStatusData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
+                          <Cell key={`cell-${index}`} fill={`var(--accent-${(index % 4) + 1})`} />
                         ))}
                       </Bar>
                     </BarChart>

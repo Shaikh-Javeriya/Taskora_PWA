@@ -470,6 +470,7 @@ export default function SettingsPanel() {
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full sm:w-auto">
+                    <Upload className="mr-2 h-4 w-4" />
                     Import
                   </Button>
                 </DialogTrigger>
