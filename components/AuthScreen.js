@@ -257,7 +257,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                            className="absolute right-0 top-0 h-full px-3"
                             onClick={() => setShowConfirmPin(!showConfirmPin)}
                           >
                             {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
