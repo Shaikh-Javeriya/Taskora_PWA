@@ -34,7 +34,7 @@ export default function ProjectManager({ onUpdate }) {
     try {
       setIsLoading(true);
       const projectsData = await dbOperations.getProjects();
-      
+
       // Enhance projects with task statistics
       const enhancedProjects = await Promise.all(
         projectsData.map(async (project) => {
@@ -42,7 +42,7 @@ export default function ProjectManager({ onUpdate }) {
           const completedTasks = tasks.filter(t => t.status === 'done').length;
           const totalTasks = tasks.length;
           const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-          
+
           return {
             ...project,
             taskCount: totalTasks,
@@ -51,7 +51,7 @@ export default function ProjectManager({ onUpdate }) {
           };
         })
       );
-      
+
       setProjects(enhancedProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
@@ -63,7 +63,7 @@ export default function ProjectManager({ onUpdate }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast.error('Project name is required');
       return;
@@ -159,7 +159,7 @@ export default function ProjectManager({ onUpdate }) {
           <h2 className="text-2xl font-bold">Projects</h2>
           <p className="text-muted-foreground">Manage your projects and track progress</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gradient-bg text-white hover:opacity-90">
@@ -167,20 +167,20 @@ export default function ProjectManager({ onUpdate }) {
               New Project
             </Button>
           </DialogTrigger>
-          
+
           <DialogContent className="glass-card border-0">
             <DialogHeader>
               <DialogTitle>
                 {editingProject ? 'Edit Project' : 'Create New Project'}
               </DialogTitle>
               <DialogDescription>
-                {editingProject 
+                {editingProject
                   ? 'Update your project details'
                   : 'Add a new project to your workspace'
                 }
               </DialogDescription>
             </DialogHeader>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Project Name *</Label>
@@ -192,7 +192,7 @@ export default function ProjectManager({ onUpdate }) {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -203,7 +203,7 @@ export default function ProjectManager({ onUpdate }) {
                   rows={3}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="color">Color Theme</Label>
@@ -219,7 +219,7 @@ export default function ProjectManager({ onUpdate }) {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="deadline">Deadline</Label>
                   <Input
@@ -230,7 +230,7 @@ export default function ProjectManager({ onUpdate }) {
                   />
                 </div>
               </div>
-              
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => {
                   setIsDialogOpen(false);
@@ -255,7 +255,7 @@ export default function ProjectManager({ onUpdate }) {
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No projects yet</h3>
             <p className="text-muted-foreground mb-4">Create your first project to get started</p>
-            <Button 
+            <Button
               onClick={() => setIsDialogOpen(true)}
               className="gradient-bg text-white hover:opacity-90"
             >
@@ -291,14 +291,14 @@ export default function ProjectManager({ onUpdate }) {
                     </Button>
                   </div>
                 </div>
-                
+
                 {project.description && (
                   <CardDescription className="text-sm">
                     {project.description}
                   </CardDescription>
                 )}
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   {getStatusBadge(project)}
@@ -306,7 +306,11 @@ export default function ProjectManager({ onUpdate }) {
                     {project.completedTasks}/{project.taskCount} tasks
                   </span>
                 </div>
-                
+
+                <div className="text-xs text-muted-foreground">
+                  Project ID: <span className="font-mono">{project.id}</span>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span>Progress</span>
@@ -314,14 +318,14 @@ export default function ProjectManager({ onUpdate }) {
                   </div>
                   <Progress value={project.progress} className="h-2" />
                 </div>
-                
+
                 {project.deadline && (
                   <div className="text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4 inline mr-1" />
                     Due: {new Date(project.deadline).toLocaleDateString()}
                   </div>
                 )}
-                
+
                 <div className="text-xs text-muted-foreground">
                   Updated: {new Date(project.updated_at).toLocaleDateString()}
                 </div>

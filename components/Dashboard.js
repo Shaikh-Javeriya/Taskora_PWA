@@ -31,17 +31,17 @@ export default function Dashboard({ onLogout }) {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true);
-      
+
       const [analyticsData, projectsData, tasksData] = await Promise.all([
         dbOperations.getAnalytics(),
         dbOperations.getProjects(),
         dbOperations.getTasks()
       ]);
-      
+
       setAnalytics(analyticsData);
       setProjects(projectsData);
       setTasks(tasksData);
-      
+
       // Generate recent activity
       const activity = [
         ...projectsData.slice(0, 3).map(p => ({
@@ -57,9 +57,9 @@ export default function Dashboard({ onLogout }) {
           status: t.status
         }))
       ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6);
-      
+
       setRecentActivity(activity);
-      
+
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -107,7 +107,7 @@ export default function Dashboard({ onLogout }) {
               <p className="text-sm text-muted-foreground">Project Management Dashboard</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -169,7 +169,7 @@ export default function Dashboard({ onLogout }) {
                   <p className="text-xs text-muted-foreground">Currently in progress</p>
                 </CardContent>
               </Card>
-              
+
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
@@ -182,7 +182,7 @@ export default function Dashboard({ onLogout }) {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Hours Worked</CardTitle>
@@ -193,7 +193,7 @@ export default function Dashboard({ onLogout }) {
                   <p className="text-xs text-muted-foreground">Total time tracked</p>
                 </CardContent>
               </Card>
-              
+
               <Card className="glass-card border-0">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Overdue Tasks</CardTitle>
@@ -208,6 +208,34 @@ export default function Dashboard({ onLogout }) {
 
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* --- Billable vs Non-billable Hours as Horizontal Bar --- */}
+              <Card className="glass-card border-0">
+                <CardHeader>
+                  <CardTitle>Billable vs Non-billable Hours</CardTitle>
+                  <CardDescription>Time tracking breakdown</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={analytics.hoursData || []}
+                      layout="vertical" // 🔹 horizontal bars
+                      margin={{ left: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis type="number" />
+                      <YAxis dataKey="name" type="category" />
+                      <Tooltip formatter={(value) => `${value}h`} />
+                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                        {(analytics.hoursData || []).map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* --- Task Status Donut Chart --- */}
               <Card className="glass-card border-0">
                 <CardHeader>
                   <CardTitle>Task Status Distribution</CardTitle>
@@ -221,11 +249,12 @@ export default function Dashboard({ onLogout }) {
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
+                        innerRadius={40}   // 🔹 donut effect
                         dataKey="value"
                         label={({ name, value }) => `${name}: ${value}`}
                       >
-                        {chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        {chartData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -233,33 +262,8 @@ export default function Dashboard({ onLogout }) {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-              
-              <Card className="glass-card border-0">
-                <CardHeader>
-                  <CardTitle>Billable vs Non-billable Hours</CardTitle>
-                  <CardDescription>Time tracking breakdown</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={analytics.hoursData || []}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}h`}
-                      >
-                        {(analytics.hoursData || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => `${value}h`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-              
+
+              {/* --- Project Status Vertical Bar --- */}
               <Card className="glass-card border-0">
                 <CardHeader>
                   <CardTitle>Project Status</CardTitle>
@@ -272,7 +276,11 @@ export default function Dashboard({ onLogout }) {
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="value" fill="var(--accent-2)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {projectStatusData.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>

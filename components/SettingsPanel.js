@@ -466,69 +466,74 @@ export default function SettingsPanel() {
             <div className="mt-4">
               <label className="block mb-2 font-medium">Import Data</label>
 
-              {/* Hidden CSV input */}
-              <input
-                ref={csvInputRef}
-                type="file"
-                accept=".csv,text/csv,application/vnd.ms-excel"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    await importCSV(file);
-                    toast.success("✅ CSV Import complete! Please refresh.");
-                  } catch (err) {
-                    toast.error("❌ CSV Import failed: " + (err.message || err));
-                  }
-                  e.target.value = "";
-                }}
-                style={{ display: "none" }}
-              />
+              {/* ===== Import Data (Dialog style to match Export) ===== */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    Import
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Import Data</DialogTitle>
+                    <DialogDescription>
+                      Restore your data from a CSV or JSON backup file.
+                    </DialogDescription>
+                  </DialogHeader>
 
-              {/* Hidden JSON input */}
-              <input
-                ref={jsonInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    await importJSON(file);
-                    toast.success("✅ JSON Import complete! Please refresh.");
-                  } catch (err) {
-                    toast.error("❌ JSON Import failed: " + (err.message || err));
-                  }
-                  e.target.value = "";
-                }}
-                style={{ display: "none" }}
-              />
+                  {/* Hidden inputs */}
+                  <input
+                    ref={csvInputRef}
+                    type="file"
+                    accept=".csv,text/csv,application/vnd.ms-excel"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        await importCSV(file);
+                        toast.success("✅ CSV Import complete! Please refresh.");
+                      } catch (err) {
+                        toast.error("❌ CSV Import failed: " + (err.message || err));
+                      }
+                      e.target.value = "";
+                    }}
+                    style={{ display: "none" }}
+                  />
 
-              {/* Import buttons */}
-              <div className="flex gap-3">
-                <button
-                  className="px-4 py-2 bg-slate-100 border rounded"
-                  onClick={() => csvInputRef.current?.click()}
-                  type="button"
-                >
-                  Import CSV
-                </button>
+                  <input
+                    ref={jsonInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        await importJSON(file);
+                        toast.success("✅ JSON Import complete! Please refresh.");
+                      } catch (err) {
+                        toast.error("❌ JSON Import failed: " + (err.message || err));
+                      }
+                      e.target.value = "";
+                    }}
+                    style={{ display: "none" }}
+                  />
 
-                <button
-                  className="px-4 py-2 bg-slate-100 border rounded"
-                  onClick={() => jsonInputRef.current?.click()}
-                  type="button"
-                >
-                  Import JSON
-                </button>
-              </div>
+                  <DialogFooter className="flex gap-2">
+                    <Button variant="outline" onClick={() => csvInputRef.current?.click()}>
+                      Import CSV
+                    </Button>
+                    <Button onClick={() => jsonInputRef.current?.click()} className="gradient-bg text-white hover:opacity-90">
+                      Import JSON (Backup)
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <p className="text-xs text-muted-foreground mt-2">
                 Use <strong>CSV</strong> for importing tasks/projects from spreadsheets.
                 Use <strong>JSON</strong> for restoring full backups.
               </p>
             </div>
-
 
             <Separator />
 
@@ -658,6 +663,6 @@ export default function SettingsPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

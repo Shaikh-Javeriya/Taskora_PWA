@@ -19,9 +19,11 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
   const [enablePin, setEnablePin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [lockInfo, setLockInfo] = useState(null);
   const [attemptsInfo, setAttemptsInfo] = useState(null);
-  
+
   // Forgot PIN states
   const [showForgotDialog, setShowForgotDialog] = useState(false);
   const [newPin, setNewPin] = useState('');
@@ -60,6 +62,11 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
     try {
       if (mode === 'setup') {
         if (enablePin) {
+          if (pin !== confirmPin) {
+            toast.error("PINs do not match");
+            setIsLoading(false);
+            return;
+          }
           await LocalAuth.setUpPin(pin, confirmPin);
           toast.success('PIN set up successfully!');
         } else {
@@ -77,7 +84,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
       console.error('Auth error:', error);
       toast.error(error.message || 'Authentication failed');
       setPin('');
-      
+
       if (mode === 'login') {
         await checkLockStatus();
         await loadAttemptsInfo();
@@ -89,8 +96,15 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
 
   const handleForgotPin = async () => {
     setIsLoading(true);
-    
+
     try {
+      if (wipeData) {
+        const confirmReset = window.confirm("This will delete ALL your saved data. Are you sure you want to continue?");
+        if (!confirmReset) {
+          setIsLoading(false);
+          return;
+        }
+      }
       await LocalAuth.resetPin(newPin, confirmNewPin, wipeData);
       toast.success('PIN reset successfully!');
       setShowForgotDialog(false);
@@ -143,13 +157,13 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
               </span>
             </CardTitle>
             <CardDescription>
-              {mode === 'setup' 
+              {mode === 'setup'
                 ? 'Secure your workspace with an optional PIN'
                 : 'Enter your PIN to access your workspace'
               }
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             {isLocked ? (
               <div className="text-center space-y-4">
@@ -160,8 +174,8 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                     Too many failed attempts. Please try again in {formatRemainingTime(lockInfo.remainingMs)}.
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setShowForgotDialog(true)}
                   className="w-full"
                 >
@@ -194,7 +208,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                       <div className="relative">
                         <Input
                           id="pin"
-                          type={showPin ? 'text' : 'password'}
+                          type={showNewPin ? 'text' : 'password'}
                           inputMode="numeric"
                           pattern="[0-9]*"
                           placeholder={mode === 'setup' ? 'Create your PIN' : 'Enter your PIN'}
@@ -213,9 +227,9 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                           variant="ghost"
                           size="icon"
                           className="absolute right-0 top-0 h-full px-3"
-                          onClick={() => setShowPin(!showPin)}
+                          onClick={() => setShowNewPin(!showNewPin)}
                         >
-                          {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showNewPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
                       </div>
                     </div>
@@ -225,7 +239,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                         <Label htmlFor="confirmPin">Confirm PIN</Label>
                         <Input
                           id="confirmPin"
-                          type={showPin ? 'text' : 'password'}
+                          type={showConfirmPin ? 'text' : 'password'}
                           inputMode="numeric"
                           pattern="[0-9]*"
                           placeholder="Confirm your PIN"
@@ -238,7 +252,17 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                           required
                           disabled={isLoading}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                          onClick={() => setShowConfirmPin(!showConfirmPin)}
+                        >
+                          {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                       </div>
+
                     )}
                   </>
                 )}
@@ -252,8 +276,8 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                 )}
 
                 <div className="space-y-2 pt-2">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full gradient-bg text-white hover:opacity-90"
                     disabled={isLoading || (enablePin && mode === 'setup' && (!pin || !confirmPin))}
                   >
@@ -264,8 +288,8 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                       </div>
                     ) : (
                       <span>
-                        {mode === 'setup' 
-                          ? (enablePin ? 'Set Up PIN' : 'Get Started') 
+                        {mode === 'setup'
+                          ? (enablePin ? 'Set Up PIN' : 'Get Started')
                           : 'Unlock Workspace'
                         }
                       </span>
@@ -273,9 +297,9 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                   </Button>
 
                   {mode === 'login' && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       className="w-full"
                       onClick={() => setShowForgotDialog(true)}
                       disabled={isLoading}
@@ -283,11 +307,11 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                       Forgot PIN?
                     </Button>
                   )}
-                  
+
                   {mode === 'setup' && !enablePin && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       className="w-full"
                       onClick={async () => {
                         try {
@@ -305,7 +329,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                 </div>
               </form>
             )}
-            
+
             {mode === 'login' && (
               <div className="mt-4 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -358,7 +382,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
               </p>
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="newPin">New PIN (4-6 digits)</Label>
@@ -378,7 +402,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="confirmNewPin">Confirm New PIN</Label>
               <Input
@@ -397,7 +421,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
               <Checkbox
                 id="wipeData"
@@ -412,10 +436,10 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
               </Label>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowForgotDialog(false);
                 setNewPin('');
@@ -426,7 +450,7 @@ export default function AuthScreen({ onAuthenticated, needsSetup }) {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleForgotPin}
               disabled={isLoading || !newPin || !confirmNewPin}
               className="bg-red-600 hover:bg-red-700 text-white"
