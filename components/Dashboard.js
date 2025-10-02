@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Plus, Settings, LogOut, Calendar, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Plus, RefreshCcw, Settings, LogOut, Calendar, Clock, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import ProjectManager from './ProjectManager';
 import KanbanBoard from './KanbanBoard';
