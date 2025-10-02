@@ -112,6 +112,15 @@ export default function Dashboard({ onLogout }) {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => window.location.reload()}
+              className="glass-card"
+            >
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+                
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setActiveTab('settings')}
               className="glass-card"
             >
