@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Palette, Shield, Download, Upload, Trash2, Database, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRef } from 'react';
 import { exportCSV, exportJSON, importCSV, importJSON } from "../lib/utils";
 
 export default function SettingsPanel() {
@@ -187,6 +188,8 @@ export default function SettingsPanel() {
       toast.error('Failed to clear data');
     }
   };
+  const csvInputRef = useRef(null);
+  const jsonInputRef = useRef(null);
 
   if (isLoading) {
     return (
@@ -460,41 +463,72 @@ export default function SettingsPanel() {
               </Dialog>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Import Data</Label>
-                <p className="text-sm text-muted-foreground">Restore from a backup file</p>
+            <div className="mt-4">
+              <label className="block mb-2 font-medium">Import Data</label>
+
+              {/* Hidden CSV input */}
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv,application/vnd.ms-excel"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    await importCSV(file);
+                    toast.success("✅ CSV Import complete! Please refresh.");
+                  } catch (err) {
+                    toast.error("❌ CSV Import failed: " + (err.message || err));
+                  }
+                  e.target.value = "";
+                }}
+                style={{ display: "none" }}
+              />
+
+              {/* Hidden JSON input */}
+              <input
+                ref={jsonInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    await importJSON(file);
+                    toast.success("✅ JSON Import complete! Please refresh.");
+                  } catch (err) {
+                    toast.error("❌ JSON Import failed: " + (err.message || err));
+                  }
+                  e.target.value = "";
+                }}
+                style={{ display: "none" }}
+              />
+
+              {/* Import buttons */}
+              <div className="flex gap-3">
+                <button
+                  className="px-4 py-2 bg-slate-100 border rounded"
+                  onClick={() => csvInputRef.current?.click()}
+                  type="button"
+                >
+                  Import CSV
+                </button>
+
+                <button
+                  className="px-4 py-2 bg-slate-100 border rounded"
+                  onClick={() => jsonInputRef.current?.click()}
+                  type="button"
+                >
+                  Import JSON
+                </button>
               </div>
-              <div>
-                <input
-                  type="file"
-                  accept=".json,.csv"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      if (file.name.endsWith('.json')) {
-                        await importJSON(file);
-                        toast.success('✅ JSON Import complete! Please refresh.');
-                      } else if (file.name.endsWith('.csv')) {
-                        await importCSV(file);
-                        toast.success('✅ CSV Import complete! Please refresh.');
-                      }
-                      setTimeout(() => window.location.reload(), 1500);
-                    } catch (err) {
-                      toast.error('❌ Import failed: ' + err.message);
-                    }
-                    e.target.value = '';
-                  }}
-                  className="hidden"
-                  id="import-file"
-                />
-                <Button variant="outline" onClick={() => document.getElementById('import-file')?.click()}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import
-                </Button>
-              </div>
+
+              <p className="text-xs text-muted-foreground mt-2">
+                Use <strong>CSV</strong> for importing tasks/projects from spreadsheets.
+                Use <strong>JSON</strong> for restoring full backups.
+              </p>
             </div>
+
 
             <Separator />
 
