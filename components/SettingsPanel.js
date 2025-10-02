@@ -469,12 +469,12 @@ export default function SettingsPanel() {
               {/* ===== Import Data (Dialog style to match Export) ===== */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    <Upload className="mr-2 h-4 w-4" />
+                  <Button variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="glass-card border-0">
                   <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>
