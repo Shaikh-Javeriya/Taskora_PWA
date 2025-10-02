@@ -47,6 +47,12 @@ export default function KanbanBoard({ onUpdate }) {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const reload = () => loadData();
+    window.addEventListener("dataUpdated", reload);
+    return () => window.removeEventListener("dataUpdated", reload);
+  }, []);
+
   const loadData = async () => {
     try {
       setIsLoading(true);
