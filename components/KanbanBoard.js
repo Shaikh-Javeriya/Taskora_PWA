@@ -173,8 +173,17 @@ export default function KanbanBoard({ onUpdate }) {
     return tasks.filter(task => String(task.project_id) === String(selectedProject));
   };
 
+  const normalizeStatus = (s) => {
+    if (!s) return "todo";
+    const v = String(s).toLowerCase().trim();
+    if (v === "todo" || v === "to do" || v === "to-do") return "todo";
+    if (v.includes("in") && v.includes("progress") || v === "in-progress" || v === "in progress") return "in-progress";
+    if (v === "done" || v === "complete" || v === "completed") return "done";
+    return "todo";
+  };
+
   const getTasksByStatus = (status) => {
-    return getFilteredTasks().filter(task => task.status === status);
+    return getFilteredTasks().filter(task => normalizeStatus(task.status) === status);
   };
 
   const getProjectName = (projectId) => {
