@@ -136,6 +136,12 @@ export default function ProjectManager({ onUpdate }) {
   const getStatusBadge = (project) => {
     if (project.progress === 100) {
       return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Completed</Badge>;
+    } else if (project.status?.toLowerCase() === "on hold") {
+      return (
+        <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+          On Hold
+        </Badge>
+      );
     } else if (project.deadline && new Date(project.deadline) < new Date()) {
       return <Badge variant="destructive">Overdue</Badge>;
     } else {
