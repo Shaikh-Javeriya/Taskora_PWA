@@ -22,7 +22,7 @@ export default function ProjectManager({ onUpdate }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    color: 'blue',
+    status: 'active',
     deadline: ''
   });
 
@@ -73,7 +73,7 @@ export default function ProjectManager({ onUpdate }) {
       const projectData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        color: formData.color,
+        status: formData.status || 'active',
         deadline: formData.deadline ? new Date(formData.deadline) : null
       };
 
@@ -87,7 +87,7 @@ export default function ProjectManager({ onUpdate }) {
 
       setIsDialogOpen(false);
       setEditingProject(null);
-      setFormData({ name: '', description: '', color: 'blue', deadline: '' });
+      setFormData({ name: '', description: '', status: '', deadline: '' });
       await loadProjects();
       onUpdate?.();
     } catch (error) {
@@ -101,7 +101,7 @@ export default function ProjectManager({ onUpdate }) {
     setFormData({
       name: project.name,
       description: project.description || '',
-      color: project.color || 'blue',
+      status: project.status || 'active',
       deadline: project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : ''
     });
     setIsDialogOpen(true);
@@ -206,16 +206,15 @@ export default function ProjectManager({ onUpdate }) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="color">Color Theme</Label>
-                  <Select value={formData.color} onValueChange={(value) => setFormData({ ...formData, color: value })}>
+                  <Label htmlFor="status">Project Status</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="blue">Blue</SelectItem>
-                      <SelectItem value="green">Green</SelectItem>
-                      <SelectItem value="purple">Purple</SelectItem>
-                      <SelectItem value="teal">Teal</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="on-hold">On Hold</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
