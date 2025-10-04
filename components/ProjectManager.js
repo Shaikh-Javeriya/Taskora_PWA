@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Plus, Edit, Trash2, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Plus, Edit, Trash2, Clock, CheckCircle, AlertCircle, PauseCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ProjectManager({ onUpdate }) {
@@ -123,33 +123,77 @@ export default function ProjectManager({ onUpdate }) {
     }
   };
 
-  const getStatusIcon = (project) => {
-    if (project.progress === 100) {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    } else if (project.status?.toLowerCase() === "on hold") {
-      return <PauseCircle className="h-4 w-4 text-yellow-500" />;
-    } else if (project.deadline && new Date(project.deadline) < new Date()) {
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
-    } else {
-      return <Clock className="h-4 w-4 text-blue-500" />;
+  // normalizeProjectStatus helper — robust against "On Hold", "on-hold", "on_hold", etc.
+  function normalizeProjectStatus(raw) {
+    if (!raw && raw !== 0) return "";                 // empty
+    const s = String(raw).toLowerCase().trim().replace(/[_-]+/g, " ");
+    if (["done", "completed", "complete", "finished"].includes(s)) return "completed";
+    if (s.includes("on hold") || s === "onhold" || s === "hold") return "on hold";
+    if (s.includes("archive") || s.includes("archived")) return "archived";
+    if (s.includes("paused")) return "on hold";
+    // default fallback
+    return s || "";
+  }
+
+  // helper to derive a normalized status from the project object (checks multiple keys & progress)
+  function getNormalizedStatusFromProject(project) {
+    // try a few possible property names
+    const raw = project?.status ?? project?.state ?? project?.project_status ?? project?.status_text ?? "";
+    const normalized = normalizeProjectStatus(raw);
+
+    // if no explicit status but progress shows 100%, treat as completed
+    if (!normalized && typeof project?.progress === "number" && project.progress >= 100) {
+      return "completed";
     }
+
+    // fallback to empty -> treat as active later
+    return normalized || "";
+  }
+
+
+  const getStatusIcon = (project) => {
+    const status = getNormalizedStatusFromProject(project);
+
+    if (status === "completed") {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    }
+    if (status === "on hold") {
+      return <PauseCircle className="h-4 w-4 text-yellow-500" />;
+    }
+    if (project?.deadline && new Date(project.deadline) < new Date()) {
+      return <AlertCircle className="h-4 w-4 text-red-500" />;
+    }
+    return <Clock className="h-4 w-4 text-blue-500" />;
   };
 
   const getStatusBadge = (project) => {
-    if (project.progress === 100) {
-      return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Completed</Badge>;
-    } else if (project.status?.toLowerCase() === "on hold") {
+    const status = getNormalizedStatusFromProject(project);
+
+    if (status === "completed") {
+      return (
+        <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+          Completed
+        </Badge>
+      );
+    }
+
+    if (status === "on hold") {
       return (
         <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
           On Hold
         </Badge>
       );
-    } else if (project.deadline && new Date(project.deadline) < new Date()) {
-      return <Badge variant="destructive">Overdue</Badge>;
-    } else {
-      return <Badge variant="secondary">Active</Badge>;
     }
+
+    // Overdue should still be shown if deadline passed (unless you want On Hold to override Overdue)
+    if (project?.deadline && new Date(project.deadline) < new Date()) {
+      return <Badge variant="destructive">Overdue</Badge>;
+    }
+
+    // default
+    return <Badge variant="secondary">Active</Badge>;
   };
+
 
   if (isLoading) {
     return (
