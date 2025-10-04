@@ -126,6 +126,8 @@ export default function ProjectManager({ onUpdate }) {
   const getStatusIcon = (project) => {
     if (project.progress === 100) {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
+    } else if (project.status?.toLowerCase() === "on hold") {
+      return <PauseCircle className="h-4 w-4 text-yellow-500" />;
     } else if (project.deadline && new Date(project.deadline) < new Date()) {
       return <AlertCircle className="h-4 w-4 text-red-500" />;
     } else {
