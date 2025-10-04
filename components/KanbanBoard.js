@@ -60,7 +60,7 @@ export default function KanbanBoard({ onUpdate }) {
         dbOperations.getTasks(),
         dbOperations.getProjects()
       ]);
-
+      console.log("Loaded tasks:", tasksData);
       setProjects(projectsData);
       setTasks(tasksData);
 
@@ -170,7 +170,7 @@ export default function KanbanBoard({ onUpdate }) {
 
   const getFilteredTasks = () => {
     if (selectedProject === 'all') return tasks;
-    return tasks.filter(task => task.project_id === selectedProject);
+    return tasks.filter(task => String(task.project_id) === String(selectedProject));
   };
 
   const getTasksByStatus = (status) => {
