@@ -4,7 +4,11 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
   },
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 43939491bb4894e979e930ba600189444352528f
   // Configure headers for PWA
   async headers() {
     return [
@@ -32,7 +36,11 @@ const nextConfig = {
       },
     ];
   },
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 43939491bb4894e979e930ba600189444352528f
   // Webpack configuration for PWA
   webpack: (config, { dev, isServer }) => {
     // Don't run service worker in development
@@ -40,11 +48,16 @@ const nextConfig = {
       const originalEntry = config.entry;
       config.entry = async () => {
         const entries = await originalEntry();
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 43939491bb4894e979e930ba600189444352528f
         // Add service worker entry
         if (entries['main.js'] && !entries['main.js'].includes('./lib/sw.js')) {
           entries['sw'] = './lib/sw.js';
         }
+<<<<<<< HEAD
 
         return entries;
       };
@@ -57,6 +70,20 @@ const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   distDir: ".next",
+=======
+        
+        return entries;
+      };
+    }
+    
+    return config;
+  },
+  
+  // Output configuration
+  output: 'standalone',
+  
+  // Image optimization
+>>>>>>> 43939491bb4894e979e930ba600189444352528f
   images: {
     unoptimized: true,
   },
