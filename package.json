@@ -1,14 +1,9 @@
 {
-<<<<<<< HEAD
     "name": "taskora",
     "version": "1.0.0",
     "description": "Taskora - Project Management Dashboard",
     "main": "main.js",
     "author": "Javeriya SHaikh",
-=======
-    "name": "nextjs-mongo-template",
-    "version": "0.1.0",
->>>>>>> 43939491bb4894e979e930ba600189444352528f
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
@@ -16,13 +11,9 @@
         "dev:webpack": "next dev --hostname 0.0.0.0 --port 3000",
         "dev:lan": "next dev --hostname 0.0.0.0 --port 3000",
         "build": "next build",
-<<<<<<< HEAD
         "start": "next start -p 3000",
         "electron-dev": "electron .",
         "electron-pack": "electron-builder"
-=======
-        "start": "next start"
->>>>>>> 43939491bb4894e979e930ba600189444352528f
     },
     "dependencies": {
         "@dnd-kit/core": "^6.1.0",
@@ -78,10 +69,7 @@
         "react-hook-form": "^7.58.1",
         "react-resizable-panels": "^3.0.3",
         "recharts": "^2.15.3",
-<<<<<<< HEAD
         "serve-handler": "^6.1.6",
-=======
->>>>>>> 43939491bb4894e979e930ba600189444352528f
         "sonner": "^2.0.5",
         "tailwind-merge": "^3.3.1",
         "tailwindcss-animate": "^1.0.7",
@@ -91,16 +79,12 @@
     },
     "devDependencies": {
         "autoprefixer": "^10.4.19",
-<<<<<<< HEAD
         "electron": "^28.0.0",
         "electron-builder": "^26.0.12",
-=======
->>>>>>> 43939491bb4894e979e930ba600189444352528f
         "globals": "^16.2.0",
         "postcss": "^8",
         "tailwindcss": "^3.4.1"
     },
-<<<<<<< HEAD
     "build": {
         "appId": "com.taskora.app",
         "productName": "Taskora",
@@ -139,7 +123,5 @@
             "icon": "public/icon.png"
         }
     },
-=======
->>>>>>> 43939491bb4894e979e930ba600189444352528f
     "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
