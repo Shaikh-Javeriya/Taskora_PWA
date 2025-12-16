@@ -270,11 +270,7 @@ export default function Dashboard({ onLogout }) {
                           isAnimationActive={false} // ✅ avoids jitter
                         >
                           {chartData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={`var(--accent-${index + 1})`}
-                            />
-                          ))}
+                            <Cell key={`cell-${index}`} fill={`var(--accent-${(index % 4) + 1})`} />                          ))}
                         </Pie>
                         <Tooltip />
                       </PieChart>
