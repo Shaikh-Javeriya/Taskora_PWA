@@ -69,9 +69,9 @@ export default function Dashboard({ onLogout }) {
   };
 
   const rawTaskStatusData = [
-    { name: 'To Do', value: tasks.filter(t => t.status === 'todo').length, color: '#94A3B8' },
-    { name: 'In Progress', value: tasks.filter(t => t.status === 'in-progress').length, color: '#3B82F6' },
-    { name: 'Done', value: tasks.filter(t => t.status === 'done').length, color: '#10B981' }
+    { name: 'To Do', value: tasks.filter(t => t.status === 'todo').length },
+    { name: 'In Progress', value: tasks.filter(t => t.status === 'in-progress').length },
+    { name: 'Done', value: tasks.filter(t => t.status === 'done').length }
   ];
 
   // ✅ remove zero-value slices (prevents overlap bugs)
@@ -269,8 +269,11 @@ export default function Dashboard({ onLogout }) {
                           dataKey="value"
                           isAnimationActive={false} // ✅ avoids jitter
                         >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          {chartData.map((_, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={`var(--accent-${index + 1})`}
+                            />
                           ))}
                         </Pie>
                         <Tooltip />
@@ -283,7 +286,7 @@ export default function Dashboard({ onLogout }) {
                         <div key={item.name} className="flex items-center gap-3">
                           <span
                             className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: item.color }}
+                            style={{ backgroundColor: `var(--accent-${index + 1})` }}
                           />
                           <span className="font-medium">{item.name}</span>
                           <span className="text-muted-foreground">({item.value})</span>
