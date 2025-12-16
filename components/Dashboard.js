@@ -68,11 +68,14 @@ export default function Dashboard({ onLogout }) {
     }
   };
 
-  const chartData = [
+  const rawTaskStatusData = [
     { name: 'To Do', value: tasks.filter(t => t.status === 'todo').length, color: '#94A3B8' },
     { name: 'In Progress', value: tasks.filter(t => t.status === 'in-progress').length, color: '#3B82F6' },
     { name: 'Done', value: tasks.filter(t => t.status === 'done').length, color: '#10B981' }
   ];
+
+  // ✅ remove zero-value slices (prevents overlap bugs)
+  const chartData = rawTaskStatusData.filter(item => item.value > 0);
 
   const projectStatusData = [
     { name: 'Active', value: projects.filter(p => p.status === 'active').length },
@@ -251,24 +254,44 @@ export default function Dashboard({ onLogout }) {
                   <CardDescription>Overview of all tasks by status</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        innerRadius={40}   // 🔹 donut effect
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}`}
-                      >
-                        {chartData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={`var(--accent-${(index % 4) + 1})`} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+
+                    {/* Donut */}
+                    <ResponsiveContainer width="60%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={85}
+                          paddingAngle={3}
+                          dataKey="value"
+                          isAnimationActive={false} // ✅ avoids jitter
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    {/* Legend */}
+                    <div className="space-y-3 text-sm">
+                      {chartData.map(item => (
+                        <div key={item.name} className="flex items-center gap-3">
+                          <span
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-muted-foreground">({item.value})</span>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
                 </CardContent>
               </Card>
 
