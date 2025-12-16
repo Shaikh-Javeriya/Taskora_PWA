@@ -278,11 +278,11 @@ export default function Dashboard({ onLogout }) {
 
                     {/* Legend */}
                     <div className="space-y-3 text-sm">
-                      {chartData.map(item => (
+                      {chartData.map((item, index) => (
                         <div key={item.name} className="flex items-center gap-3">
                           <span
                             className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: `var(--accent-${(index % 4) + 1})` }}
+                            style={{ backgroundColor: `var(--accent-${index + 1})` }}
                           />
                           <span className="font-medium">{item.name}</span>
                           <span className="text-muted-foreground">({item.value})</span>
