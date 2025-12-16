@@ -95,7 +95,7 @@ export default function Dashboard({ onLogout }) {
       </div>
     );
   }
-
+console.log("DASHBOARD VERSION = 2025-CHART-FIX");
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -252,6 +252,7 @@ export default function Dashboard({ onLogout }) {
                 <CardHeader>
                   <CardTitle>Task Status Distribution</CardTitle>
                   <CardDescription>Overview of all tasks by status</CardDescription>
+                  <CardDescription className="text-red-500">DASHBOARD VERSION = 2025-CHART-FIX</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col md:flex-row items-center gap-6">
